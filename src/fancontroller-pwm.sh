@@ -4,7 +4,7 @@ exec 9>/run/fancontroller-pwm.lock; flock -n 9 || exit 0
 log=/var/log/fancontroller-pwm.log; state=/var/lib/fancontroller-pwm/state
 mkdir -p "$(dirname "$state")"; touch "$log"
 sensor="${TEMP_SENSOR:-coretemp-isa-0000}"; min="${MIN_TEMP:-45}"; max="${MAX_TEMP:-59}"; stop="${FAN_STOP_TEMP:-45}"; full="${FAN_FULL_TEMP:-60}"; cool="${COOLDOWN_SECONDS:-120}"
-temp=$(sensors "$sensor" 2>/dev/null | awk '/Package id 0:/ {gsub("+","",$4); sub("°C","",$4); print int($4); exit}')
+temp=$(sensors "$sensor" 2>/dev/null | awk '/Package id 0:/ {gsub(/\+/,"",$4); sub(/°C/,"",$4); print int($4); exit}')
 [ -n "${temp:-}" ] || exit 1
 hw=$(for d in /sys/class/hwmon/hwmon*; do [ "$(cat "$d/name" 2>/dev/null)" = tc654 ] && echo "$d"; done | head -1)
 [ -n "${hw:-}" ] || exit 1
