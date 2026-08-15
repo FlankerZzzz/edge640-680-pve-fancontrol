@@ -1,4 +1,6 @@
-# PVE LM75 + TC654 PWM Fan Controller
+# 适用于 Edge640/Edge680 及其他 OEM 型号（例如 Dell VEP1445）的 PVE LM75 + TC654 PWM 风扇控制器
+
+> 本项目由 Codex 辅助生成和整理。投入生产前务必在目标硬件上完成 I²C 地址、PWM 曲线、风扇转速、温度保护和断电/回滚测试；不同 OEM 型号可能需要调整总线、地址或控制曲线。
 
 适用于 Proxmox VE 9.2 / Debian 13 的 LM75 温度传感器和 TC654 PWM 风扇一键部署工具。
 
