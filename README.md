@@ -15,7 +15,7 @@
 ```bash
 git clone https://github.com/REPLACE_ME/fancontrol-pve.git
 cd fancontrol-pve
-sudo ./install.sh
+./install.sh
 ```
 
 默认曲线：低于 45°C 停转；45–59°C 线性升速；60°C 及以上全速。首次部署前请确认风扇在 PWM=0 时允许停转，并准备本地控制台以便回滚。
@@ -26,7 +26,7 @@ sudo ./install.sh
 systemctl status i2c-hwmon-devices.service fancontroller-pwm.timer
 sensors
 tail -f /var/log/fancontroller-pwm.log
-sudo ./uninstall.sh
+./uninstall.sh
 ```
 
 可通过环境变量调整：`I2C_BUS`、`LM75_ADDR`、`TC654_ADDR`、`TEMP_SENSOR`、`POLL_SECONDS`、`MIN_TEMP`、`MAX_TEMP`、`FAN_STOP_TEMP`、`FAN_FULL_TEMP`、`COOLDOWN_SECONDS`。
@@ -34,4 +34,3 @@ sudo ./uninstall.sh
 ## 安全说明
 
 这是硬件控制脚本，默认只写入检测到的 hwmon PWM 节点，不修改网络、GRUB 或存储配置。不同主板的 I²C 总线和地址可能不同，安装前请用 `i2cdetect -l` / `i2cdetect -y 0` 核对。
-

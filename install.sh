@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
-[ "$(id -u)" -eq 0 ] || { echo '请用 root 运行'; exit 1; }
+if [ "$(id -u)" -ne 0 ]; then
+  command -v sudo >/dev/null 2>&1 || { echo '请以 root 运行：su - 或直接 ./install.sh'; exit 1; }
+  exec sudo bash "$0" "$@"
+fi
 DIR="$(cd "$(dirname "$0")" && pwd)"
 install -D -m 0755 "$DIR/src/i2c-hwmon-devices.sh" /usr/local/sbin/i2c-hwmon-devices.sh
 install -D -m 0755 "$DIR/src/fancontroller-pwm.sh" /usr/local/sbin/fancontroller-pwm.sh
