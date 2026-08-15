@@ -1,0 +1,8 @@
+[Unit]
+Description=CPU temperature based TC654 PWM fan control
+Requires=i2c-hwmon-devices.service
+After=i2c-hwmon-devices.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/fancontroller-pwm.sh

@@ -1,0 +1,10 @@
+[Unit]
+Description=Run PWM fan controller periodically
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=10s
+Unit=fancontroller-pwm.service
+
+[Install]
+WantedBy=timers.target
