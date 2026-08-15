@@ -15,8 +15,8 @@
 ## 安装
 
 ```bash
-git clone https://github.com/REPLACE_ME/fancontrol-pve.git
-cd fancontrol-pve
+git clone https://github.com/FlankerZzzz/edge640-680-pve-fancontrol.git
+cd edge640-680-pve-fancontrol
 ./install.sh
 ```
 
