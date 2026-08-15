@@ -4,6 +4,7 @@ Description=Run PWM fan controller periodically
 [Timer]
 OnBootSec=30s
 OnUnitActiveSec=10s
+AccuracySec=1s
 Unit=fancontroller-pwm.service
 
 [Install]
