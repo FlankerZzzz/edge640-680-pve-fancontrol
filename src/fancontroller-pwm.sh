@@ -12,4 +12,5 @@ echo 1 > "$hw/pwm1_enable" 2>/dev/null || true; echo 1 > "$hw/pwm1_mode" 2>/dev/
 old=$(awk '{print $1}' "$state" 2>/dev/null || echo 0); last=$(awk '{print $2}' "$state" 2>/dev/null || echo 0); now=$(date +%s); pwm=$old
 if (( temp >= full )); then pwm=255; elif (( temp <= stop )); then pwm=0; else pwm=$(( (temp-stop)*255/(full-stop) )); fi
 if (( pwm < old && now-last < cool )); then pwm=$old; fi
-echo "$pwm" > "$hw/pwm1"; printf '%s temp=%sC pwm=%s\n' "$(date -Is)" "$temp" "$pwm" >> "$log"; echo "$pwm $now" > "$state"
+echo "$pwm" > "$hw/pwm1"; printf '%s temp=%sC pwm=%s\n' "$(date -Is)" "$temp" "$pwm" >> "$log"
+if (( pwm != old )); then echo "$pwm $now" > "$state"; fi
