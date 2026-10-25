@@ -5,6 +5,13 @@
     if (window.__edgeFanNative || !window.Ext || !window.PVE) { return; }
     window.__edgeFanNative = true;
     const esc = value => Ext.String.htmlEncode(String(value == null ? '—' : value));
+    // Linux TC654 sysfs values for the 16 hardware duty codes (not codes 0–15).
+    const pwmValues = [77,88,102,112,124,136,148,160,172,184,196,207,219,231,243,255];
+    const approximateRpm = [1800,2100,2450,2800,3200,3550,4000,4450,5000,5500,6050,6650,7300,7900,8450,8800];
+    const levels = pwmValues.map(function (pwm, index) {
+        return {pwm:pwm, level:index+1, rpm:approximateRpm[index], custom:false,
+            label:'档位 ' + (index+1) + ' · 约 ' + approximateRpm[index].toLocaleString('en-US') + ' RPM'};
+    });
     const reasons = {auto:'自动温控', manual:'手动 PWM', cooldown:'降速等待',
         high_temperature:'高温全速保护', protection_cooldown:'全速保护恢复等待', failsafe:'故障全速保护'};
 
@@ -36,12 +43,27 @@
 
         message: function (text) { this.down('#edge-result').setHtml(esc(text)); },
 
+        describePwm: function (pwm) {
+            if (pwm == null) { return '—'; }
+            if (pwm === 0) { return '已停转 · PWM 0'; }
+            const index = pwmValues.indexOf(pwm);
+            return index < 0 ? 'PWM ' + pwm + ' / 255' : '档位 ' + (index+1) + ' / 16 · PWM ' + pwm;
+        },
+
         syncForm: function () {
             const me = this, config = me.snapshot && me.snapshot.config;
             if (!config) { return; }
             me.suppress = true;
             me.down('#edge-mode').setValue({edgeMode:config.mode});
-            me.down('#edge-pwm').setValue(config.manual_pwm);
+            const field = me.down('#edge-pwm'), store = field.getStore();
+            const custom = store.findRecord('custom', true);
+            if (custom) { store.remove(custom); }
+            if (store.findExact('pwm', config.manual_pwm) < 0) {
+                // Preserve old raw-PWM settings until an administrator chooses a new level.
+                store.add({pwm:config.manual_pwm, custom:true,
+                    label:'已有自定义 PWM ' + config.manual_pwm + '（可重新选择运行档位）'});
+            }
+            field.setValue(config.manual_pwm);
             me.formRevision = config.revision;
             me.suppress = false;
             me.dirty = false;
@@ -72,10 +94,10 @@
             me.down('#edge-rpm1').setHtml(value(status.stale ? null : (live.rpm || [])[0], 'RPM'));
             me.down('#edge-rpm2').setHtml(value(status.stale ? null : (live.rpm || [])[1], 'RPM'));
             me.down('#edge-actual').setValue(status.stale ? '采样过期，状态未知' : (reasons[state.reason] || '等待采样'));
-            me.down('#edge-readback').setValue(status.stale ? '—' : String(live.pwm == null ? '—' : live.pwm) + ' / 255');
+            me.down('#edge-readback').setValue(status.stale ? '—' : me.describePwm(live.pwm));
             me.down('#edge-requested').setValue(status.stale ? '—' : state.last_pwm);
             me.down('#edge-wait').setValue(status.cooldown_remaining > 0 ? status.cooldown_remaining + ' 秒' : '无');
-            me.down('#edge-saved').setValue(config ? (config.mode === 'auto' ? '自动温控' : '手动 PWM ' + config.manual_pwm) + ' · 版本 ' + config.revision : '配置不可用');
+            me.down('#edge-saved').setValue(config ? (config.mode === 'auto' ? '自动温控' : '固定转速 · ' + me.describePwm(config.manual_pwm)) + ' · 版本 ' + config.revision : '配置不可用');
             me.down('#edge-services').setValue('温控 ' + ((status.services || {}).timer || 'unknown') + ' / watchdog ' + ((status.services || {}).watchdog || 'unknown'));
             me.down('#edge-updated').setValue(state.updated_at ? new Date(state.updated_at * 1000).toLocaleTimeString() : '—');
             const warning = status.error || status.warning || (status.stale ? '采样已过期；请检查温控服务和独立 watchdog。' : '');
@@ -159,12 +181,16 @@
                 defaults:{anchor:'100%'}, items:[
                     {xtype:'radiogroup', itemId:'edge-mode', fieldLabel:'控制模式', labelWidth:125, columns:2,
                         items:[{boxLabel:'自动温控', name:'edgeMode', inputValue:'auto', checked:true},
-                               {boxLabel:'手动 PWM', name:'edgeMode', inputValue:'manual'}], listeners:{change:edited}},
-                    {xtype:'numberfield', itemId:'edge-pwm', fieldLabel:'请求 PWM (0–255)', labelWidth:125,
-                        minValue:0, maxValue:255, allowDecimals:false, allowExponential:false, value:160,
+                               {boxLabel:'固定转速', name:'edgeMode', inputValue:'manual'}], listeners:{change:edited}},
+                    {xtype:'combobox', itemId:'edge-pwm', fieldLabel:'选择 RPM 档位', labelWidth:125,
+                        store:{fields:[{name:'pwm',type:'int'},'label','level','rpm','custom'], data:levels},
+                        queryMode:'local', valueField:'pwm', displayField:'label',
+                        editable:false, forceSelection:true, allowBlank:false, value:160,
+                        listConfig:{maxHeight:560}, maxWidth:560,
                         disabled:true, listeners:{change:edited}},
+                    {xtype:'component', html:'RPM 为参考值（沿用 ESXi 档位标注），实际转速会因风扇和环境不同而变化。最低运行档不发送停转指令；这不是闭环恒定 RPM 控制。', margin:'8 0 12 0'},
                     display('edge-saved','已保存设置'), display('edge-actual','实际控制状态'),
-                    display('edge-readback','读回 PWM'), display('edge-requested','当前控制请求'),
+                    display('edge-readback','实际档位 / PWM'), display('edge-requested','当前控制请求'),
                     display('edge-wait','降速／保护等待'), display('edge-services','温控／保护服务'),
                     display('edge-updated','最后控制采样'),
                     {xtype:'component', itemId:'edge-warning', style:'font-weight:600', margin:'8 0', html:''},
