@@ -1,0 +1,7 @@
+[Unit]
+Description=Force full PWM when control sampling stalls
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/fancontroller-failsafe.sh watchdog
+TimeoutStartSec=8s

@@ -1,0 +1,7 @@
+[Unit]
+Description=Emergency full PWM after controller failure
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/fancontroller-failsafe.sh controller_failed
+TimeoutStartSec=8s

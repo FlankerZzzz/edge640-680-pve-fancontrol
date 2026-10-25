@@ -2,10 +2,12 @@
 Description=Instantiate LM75 and TC654 I2C hwmon devices
 After=systemd-modules-load.service
 Before=fancontroller-pwm.service
+OnFailure=fancontroller-failsafe.service
 
 [Service]
 Type=oneshot
 ExecStart=/usr/local/sbin/i2c-hwmon-devices.sh
+ExecStartPost=/usr/local/sbin/fancontroller-failsafe.sh i2c_startup_full_speed
 RemainAfterExit=yes
 
 [Install]

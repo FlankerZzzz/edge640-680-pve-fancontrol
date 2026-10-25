@@ -1,0 +1,19 @@
+[Unit]
+Description=Edge PVE local fan control Web panel
+After=network.target i2c-hwmon-devices.service
+Wants=fancontroller-pwm.timer fancontroller-watchdog.timer
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/lib/edge-fancontrol/fancontrol_web.py
+Restart=on-failure
+RestartSec=5s
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=full
+ReadWritePaths=/etc/edge-fancontrol
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=Check independent fan control heartbeat
+
+[Timer]
+OnBootSec=20s
+OnUnitActiveSec=15s
+AccuracySec=1s
+Unit=fancontroller-watchdog.service
+
+[Install]
+WantedBy=timers.target

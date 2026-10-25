@@ -1,4 +1,25 @@
-# Version 1.0.0 — Baseline
+# Version 1.1.0-dev — PVE 控制页面与 fallback
+
+更新日期：2026-10-25。功能分支：`feature/pve-control-page`。
+
+此版是开发测试版，尚未在目标 PVE 上完成安装、重启和压测验收。
+
+- 新增本机 Web 控制页：实时温度、双风扇 RPM、请求/实际 PWM、自动/手动、配置持久化、日志和趋势。
+- 页面与 10 秒定时任务共用 Python 标准库控制核心及进程锁。
+- 改为直接读取 hwmon sysfs；多 CPU Package 取最高值，LM75 仅辅助显示。
+- 手动模式仍受高温及故障全速保护约束。
+- 降速等待从持续需要降速开始计时；高温保护恢复等待不重复叠加。
+- 温度缺失/无效、配置损坏/缺失、RPM 异常、读写错误均尝试全速 PWM 255。
+- 新增独立 Shell fallback、systemd `OnFailure` 和 15 秒 watchdog。
+- 应用日志每日轮转、压缩，`rotate 30` + `maxage 30`；卸载后保留轮转规则。
+- 默认 loopback 监听，管理员通过 SSH 隧道与管理令牌访问，不复用 PVE 登录凭据。
+- 保留 1.0 基准标签；本次未重新发布或覆盖 `v1.0.0`。
+
+测试与部署详见 [docs/WEB.md](docs/WEB.md) 和 [docs/FALLBACK.md](docs/FALLBACK.md)。
+
+---
+
+# Version 1.0.0 — Baseline（历史记录）
 
 发布日期：2026-08-23  
 状态：基准版本（Baseline）

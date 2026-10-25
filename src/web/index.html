@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Edge · PVE 风扇控制</title><link rel="stylesheet" href="/style.css"><script defer src="/app.js"></script></head>
+<body>
+<aside><a class="brand" href="/">EDGE<span>thermal console</span></a><div class="nav-label">主机管理</div><div class="nav-item">◉ <span>风扇控制</span></div><div class="aside-bottom">PROXMOX VE<br><span>LM75 + TC654 / 本机管理</span></div></aside>
+<main>
+<header><div><div class="eyebrow">EDGE640 / 680 · PROXMOX VE</div><h1>风扇控制<span class="version" id="version">1.1 开发版</span></h1><p id="host">连接主机后，显示实时传感器和已保存设置。</p></div><div class="header-actions"><button class="quiet" id="theme" aria-label="切换亮暗主题">切换主题</button><span class="badge" id="badge">未连接</span></div></header>
+<section class="login panel" id="login"><div><h2>连接管理服务</h2><p>令牌只保留在当前页面内存中，关闭页面后需重新输入。</p></div><form id="login-form"><label for="token">管理令牌</label><div class="login-fields"><input id="token" type="password" autocomplete="off" placeholder="输入主机生成的管理令牌" required><button type="submit">连接</button></div></form></section>
+<div class="notice" id="notice" role="status" hidden></div>
+<section class="metrics" aria-label="实时传感器">
+<article class="metric"><span>CPU Package</span><div id="temp">—<small>°C</small></div><p>多 CPU 时取最高 Package 温度</p></article>
+<article class="metric"><span>主板温度 · LM75</span><div id="lm75">—<small>°C</small></div><p>辅助监测 · 不参与温控曲线</p></article>
+<article class="metric"><span>风扇 1</span><div id="rpm1">—<small>RPM</small></div><p>TC654 转速反馈</p></article>
+<article class="metric"><span>风扇 2</span><div id="rpm2">—<small>RPM</small></div><p>TC654 转速反馈</p></article>
+</section>
+<div class="workspace">
+<section class="panel control"><div class="panel-heading"><h2>控制设置</h2><span id="revision">配置版本 —</span></div><div class="panel-body">
+<div class="choices"><label class="choice"><input id="auto" type="radio" name="mode" value="auto" checked><span><strong>自动温控</strong><small id="curve">45°C 起调节 · 60°C 全速</small></span></label><label class="choice"><input id="manual" type="radio" name="mode" value="manual"><span><strong>手动 PWM</strong><small>固定输出 · 设置重启后恢复</small></span></label></div>
+<div class="manual-controls" id="manual-controls" hidden><label for="slider">请求 PWM <span>0–255</span></label><div class="slider-row"><input id="slider" type="range" min="0" max="255" step="1" value="160"><input id="pwm-input" type="number" min="0" max="255" step="1" value="160" aria-label="PWM 数值"></div><p>PWM 0 会停转。芯片档位会量化，以读回值和实际 RPM 为准。</p></div>
+<div class="protection"><span class="protect-dot"></span><div><strong>全速保护优先</strong><p>高温、温度读取失败或控制异常时请求 PWM 255。页面关闭不影响温控任务。</p></div></div>
+<div class="form-actions"><button id="apply" disabled>保存并执行</button><button id="reset" class="quiet" disabled>恢复当前设置</button></div><p id="result" role="status" aria-live="polite">连接后可修改设置。</p>
+</div><div class="saved-row"><span>已保存 <strong id="saved">—</strong></span><span>实际状态 <strong id="actual">—</strong></span></div></section>
+<section class="panel output"><div class="panel-heading"><h2>运行状态</h2><span id="service">—</span></div><div class="panel-body"><div class="pwm-value"><span>TC654 读回 PWM</span><div><strong id="pwm">—</strong><small>/ 255</small></div></div><div class="meter"><div id="meter-fill"></div></div><div class="output-row"><span>控制器请求</span><strong id="requested">—</strong></div><div class="output-row"><span>降速等待</span><strong id="wait">—</strong></div><div class="output-row"><span>PWM 控制来源</span><strong id="pwm-mode">—</strong></div><div class="output-row"><span>最后控制采样</span><strong id="sample-time">—</strong></div><div class="output-row"><span>I²C 初始化</span><strong id="i2c">—</strong></div><div class="output-row"><span>独立 watchdog</span><strong id="watchdog">—</strong></div></div></section>
+</div>
+<section class="panel history"><div class="panel-heading"><h2>温度趋势</h2><span>当前页面会话 · 每约 3 秒刷新</span></div><div class="chart-labels"><span>°C</span><span>橙色为 CPU Package 温度</span></div><svg id="chart" viewBox="0 0 1000 140" role="img" aria-label="当前页面采样温度趋势"><path class="chart-grid" d="M0 20H1000M0 70H1000M0 120H1000"></path><polyline id="chart-line" points=""></polyline></svg><p id="chart-empty">连接后开始记录趋势，刷新页面会清空此图。</p></section>
+<section class="panel logs"><div class="panel-heading"><h2>最近控制日志</h2><button class="quiet" id="logs-refresh" disabled>刷新日志</button></div><pre id="logs">连接后读取主机日志。</pre><div class="log-note">主机日志每日轮转，最多保留 30 天；此处仅显示最近 30 行。</div></section>
+<footer><span id="updated">尚无有效采样</span><span>Edge thermal console · Codex 辅助开发 · 实机验证后投产</span></footer>
+</main></body></html>
