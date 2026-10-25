@@ -55,3 +55,7 @@ python3 tests/pve_acceptance.py --run-live --stress-seconds 120
 报告保存到主机 `/var/lib/fancontroller-pwm/acceptance-*/report.json`。旧服务备份位于主机 `/root/edge-fancontrol-backup-2ebUShyn/installed.tgz`。
 
 仍未验证：整机重启、8秒超时路径、watchdog自身失效、真实I²C硬件故障、浏览器视觉/移动端布局。实机没有修改网络、GRUB或SR-IOV。
+
+## 同日补充：PVE 原生页面
+
+服务器端接入已在 2.70 部署：32 项自动测试通过；Perl 注册与本机 pvesh 状态读取通过；8 项 HTTPS 会话/CSRF/API 验收全部通过。原生入口通过 PVE 节点菜单加载，查看需要 Sys.Audit，修改需要 Sys.Modify。细节和验证边界见 [PVE-NATIVE.md](PVE-NATIVE.md)。

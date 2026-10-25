@@ -4,7 +4,7 @@
 
 这是面向 Proxmox VE 9.2 / Debian 13 的轻量风扇控制服务。它自动加载 LM75、TC654 驱动，实例化 I²C 设备，从 CPU `coretemp` 读取 Package 温度，并通过 TC654 的 PWM 输出调节风扇。
 
-版本详情见 [VERSION.md](VERSION.md)，页面和升级操作见 [docs/WEB.md](docs/WEB.md)，保护与日志策略见 [docs/FALLBACK.md](docs/FALLBACK.md)。许可证为 [MIT](LICENSE)。本机页面沿用 ESXi 版的状态/设置分离设计；这版通过独立端口提供页面，不修改 PVE 8006 页面或系统包。
+版本详情见 [VERSION.md](VERSION.md)。[PVE 原生节点页面安装](docs/PVE-NATIVE.md) 可让任意浏览器登录 PVE 后看到“风扇控制”；[独立页面与升级操作](docs/WEB.md) 保留本机端口访问方式。[保护与日志策略](docs/FALLBACK.md)。许可证为 [MIT](LICENSE)。
 
 ## 已验证环境
 
@@ -78,6 +78,16 @@ root 用户不需要 `sudo`；普通用户若已安装 `sudo`，脚本会自动�
 - `/etc/logrotate.d/edge-fancontrol`（每日轮转 / 30 天）
 
 ## 打开控制页面
+
+推荐服务器端原生接入（已有控制核心时执行）：
+
+```bash
+bash native/install.sh
+```
+
+刷新 PVE 网页，选择节点 → 风扇控制。沿用 PVE 登录、`Sys.Audit` / `Sys.Modify` 权限及 CSRF，无需下面的 SSH 隧道或独立令牌。新机器可直接 `bash ./install.sh --native` 安装全部组件。
+
+如果选择独立页面模式：
 
 在管理员电脑保持 SSH 隧道运行：
 

@@ -14,6 +14,9 @@
 - 应用日志每日轮转、压缩，`rotate 30` + `maxage 30`；卸载后保留轮转规则。
 - 默认 loopback 监听，管理员通过 SSH 隧道与管理令牌访问，不复用 PVE 登录凭据。
 - 保留 1.0 基准标签；本次未重新发布或覆盖 `v1.0.0`。
+- 新增可选 PVE 服务器端原生节点面板和 protected API；沿用 PVE 会话、CSRF 与节点 ACL，无需浏览器扩展/隧道。
+- 原生接入采用两处可逆的标记钩子及独立 JS/Perl 模块，安装前备份及校验，失败回滚。
+- 原生接入已在 2.70 完成 32 项测试及 8 项真实 HTTPS 验收。详情见 [PVE-NATIVE.md](docs/PVE-NATIVE.md)。
 
 测试与部署详见 [docs/WEB.md](docs/WEB.md) 和 [docs/FALLBACK.md](docs/FALLBACK.md)。
 
