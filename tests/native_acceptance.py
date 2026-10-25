@@ -20,9 +20,9 @@ def main():
     if not args.run_native or sys.platform != "linux" or os.geteuid() != 0:
         parser.error("Run on PVE as root with --run-native")
     # No password or ticket is passed in a shell command or printed in reports.
-    perl = ('PVE::Cluster::cfs_update(); print encode_json({'
-            'ticket=>PVE::AccessControl::assemble_ticket("root@pam"),'
-            'csrf=>PVE::AccessControl::assemble_csrf_prevention_token("root@pam")});')
+    perl = ("PVE::Cluster::cfs_update(); print encode_json({"
+            "ticket=>PVE::AccessControl::assemble_ticket('root@pam'),"
+            "csrf=>PVE::AccessControl::assemble_csrf_prevention_token('root@pam')});")
     result = subprocess.run(["perl", "-MPVE::Cluster", "-MPVE::AccessControl", "-MJSON", "-e", perl],
                             capture_output=True, text=True, check=True, timeout=15)
     identity = json.loads(result.stdout)
