@@ -90,6 +90,35 @@ class ControlTests(unittest.TestCase):
         self.assertEqual(state["last_pwm"], 77)
         self.assertEqual(self.controller.config()["manual_pwm"], 77)
 
+    def test_manual_lower_and_higher_pwm_apply_immediately(self):
+        self.settle()
+        self.controller.apply("manual", 255, 0)
+        result = self.controller.apply("manual", 77, 1)
+        self.assertEqual(result["state"]["last_pwm"], 77)
+        self.assertEqual(result["state"]["reason"], "manual")
+        self.assertIsNone(result["state"]["pending_since"])
+        self.assertEqual(self.controller.status()["cooldown_remaining"], 0)
+        self.assertEqual(self.controller.apply("manual", 160, 2)["state"]["last_pwm"], 160)
+
+    def test_switching_to_manual_cancels_ordinary_auto_cooldown(self):
+        self.settle()
+        self.hw.temp = 49
+        self.advance(10)
+        self.assertIsNotNone(self.controller.load_state()["pending_since"])
+        result = self.controller.apply("manual", 77, 0)
+        self.assertEqual(result["state"]["last_pwm"], 77)
+        self.assertIsNone(result["state"]["pending_since"])
+
+    def test_manual_selection_cannot_cancel_fault_protection(self):
+        self.hw.temp = None
+        self.controller.tick()
+        self.hw.temp = 52
+        result = self.controller.apply("manual", 77, 0)
+        self.assertEqual(result["state"]["last_pwm"], 255)
+        self.assertEqual(result["state"]["reason"], "protection_cooldown")
+        self.assertEqual(self.advance(119)["last_pwm"], 255)
+        self.assertEqual(self.advance(1)["last_pwm"], 77)
+
     def test_missing_invalid_temperature_full_speed(self):
         for value in (None, float("nan"), float("inf"), -10, 130, "bad"):
             with self.subTest(value=value):

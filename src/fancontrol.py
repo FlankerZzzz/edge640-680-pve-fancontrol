@@ -242,7 +242,11 @@ class Controller:
                 target = config["manual_pwm"] if config["mode"] == "manual" else max(
                     0, min(255, int((temp - config["stop_temp"]) * 255 /
                                    (config["full_temp"] - config["stop_temp"]))))
-                if target < previous:
+                if config["mode"] == "manual":
+                    # Explicit fixed settings take effect immediately in either direction.
+                    # High-temperature and fault recovery protection above still wins.
+                    pwm, reason, pending = target, "manual", None
+                elif target < previous:
                     pending = now if pending is None else pending
                     if now - pending < cooldown:
                         pwm, reason = previous, "cooldown"
