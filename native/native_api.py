@@ -2,10 +2,7 @@
 """EDGE_FANCONTROL_NATIVE: invoked only by the protected PVE API module."""
 import argparse
 import json
-from pathlib import Path
-import sys
-
-sys.path.insert(0, "/usr/local/lib/edge-fancontrol")
+# Installed beside fancontrol.py; tests supply the checkout's src directory.
 from fancontrol import Controller, Conflict
 from fancontrol_web import panel_status, service_status, tail_logs
 
