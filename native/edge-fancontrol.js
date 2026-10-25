@@ -1,6 +1,7 @@
 /* EDGE_FANCONTROL_NATIVE: PVE node panel. Uses PVE session/CSRF/ACL only. */
 (function () {
-    'use strict';
+    // ExtJS 7 callParent inspects Function.caller. These class methods must
+    // remain non-strict; strict mode prevents the parent initializer running.
     if (window.__edgeFanNative || !window.Ext || !window.PVE) { return; }
     window.__edgeFanNative = true;
     const esc = value => Ext.String.htmlEncode(String(value == null ? '—' : value));

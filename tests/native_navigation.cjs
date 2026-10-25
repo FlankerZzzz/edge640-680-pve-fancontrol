@@ -13,7 +13,11 @@ vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../native/edge-fancontr
 const navigation = definitions['PVE.edge.FanControlNavigation'];
 const node = new PVE.node.Config();
 node.items=[{itemId:'summary'}];
-node.callParent=()=>{node.parentCalled=true;};
+// Match the real ExtJS 7 callParent mechanism; a strict caller is invisible.
+node.callParent=function () {
+    assert(this.callParent.caller, 'Strict-mode method broke ExtJS callParent caller inspection');
+    node.parentCalled=true;
+};
 navigation.initComponent.call(node);
 assert(node.parentCalled);
 assert.equal(node.items.length,2);
