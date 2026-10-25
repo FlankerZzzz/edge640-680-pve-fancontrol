@@ -32,6 +32,18 @@ const built = {nodename:'node A',callParent:function () {
     assert(this.callParent.caller, 'Panel initializer must also remain non-strict');
 },on:()=>{}};
 panel.initComponent.call(built);
+assert.equal(built.items[0].items.length,5);
+assert.equal(built.items[0].items[3].items[0].itemId,'edge-rpm2');
+assert.equal(built.items[0].items[4].title,'当前 PWM');
+assert.equal(built.items[0].items[4].items[0].itemId,'edge-pwm-card');
+assert(panel.pwmCardHtml(88).includes('2 / 16'));
+assert(panel.pwmCardHtml(88).includes('PWM 1/15'));
+assert(panel.pwmCardHtml(88).includes('34.5%'));
+assert(panel.pwmCardHtml(255).includes('16 / 16'));
+assert(panel.pwmCardHtml(255).includes('100.0%'));
+assert(panel.pwmCardHtml(0).includes('已停转'));
+assert(panel.pwmCardHtml(null).includes('等待有效读回'));
+assert(panel.pwmCardHtml(119).includes('非标准档位'));
 const combo=built.items[1].items.find(item=>item.itemId==='edge-pwm');
 assert.equal(combo.xtype,'combobox');
 assert.equal(combo.editable,false);

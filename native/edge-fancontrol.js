@@ -50,6 +50,16 @@
             return index < 0 ? 'PWM ' + pwm + ' / 255' : '档位 ' + (index+1) + ' / 16 · PWM ' + pwm;
         },
 
+        pwmCardHtml: function (pwm) {
+            const valid = Number.isInteger(pwm) && pwm >= 0 && pwm <= 255;
+            const index = valid ? pwmValues.indexOf(pwm) : -1;
+            const main = !valid ? '—' : pwm === 0 ? '已停转' : index >= 0 ? (index+1) + ' / 16' : '非标准档位';
+            const detail = !valid ? '等待有效读回' : pwm === 0 ? 'PWM 0 / 255 · 0.0%' :
+                (index >= 0 ? 'PWM ' + index + '/15' : 'PWM ' + pwm + '/255') + ' · ' + (pwm/255*100).toFixed(1) + '%';
+            return '<div style="font-size:28px;padding:7px 0">' + esc(main) + '</div>' +
+                '<div style="font-size:12px;opacity:0.8" title="档位取 TC654 实际读回；百分比为 sysfs PWM / 255 的归一化比例">' + esc(detail) + '</div>';
+        },
+
         syncForm: function () {
             const me = this, config = me.snapshot && me.snapshot.config;
             if (!config) { return; }
@@ -93,6 +103,7 @@
             me.down('#edge-board').setHtml(value(status.stale ? null : live.lm75, '°C'));
             me.down('#edge-rpm1').setHtml(value(status.stale ? null : (live.rpm || [])[0], 'RPM'));
             me.down('#edge-rpm2').setHtml(value(status.stale ? null : (live.rpm || [])[1], 'RPM'));
+            me.down('#edge-pwm-card').setHtml(me.pwmCardHtml(status.stale ? null : live.pwm));
             me.down('#edge-actual').setValue(status.stale ? '采样过期，状态未知' : (reasons[state.reason] || '等待采样'));
             me.down('#edge-readback').setValue(status.stale ? '—' : me.describePwm(live.pwm));
             me.down('#edge-requested').setValue(status.stale ? '—' : state.last_pwm);
@@ -172,8 +183,8 @@
             const display = (id, label) => ({xtype:'displayfield', itemId:id, fieldLabel:label, labelWidth:125, value:'—'});
             me.items = [{
                 xtype:'container', layout:{type:'hbox', align:'stretch'}, margin:'0 0 15 0',
-                items:[['edge-cpu','CPU Package'],['edge-board','LM75 主板温度'],['edge-rpm1','风扇 1'],['edge-rpm2','风扇 2']].map(function (item) {
-                    return {xtype:'panel', title:item[1], flex:1, margin:'0 8 0 0', bodyPadding:10,
+                items:[['edge-cpu','CPU Package'],['edge-board','LM75 主板温度'],['edge-rpm1','风扇 1'],['edge-rpm2','风扇 2'],['edge-pwm-card','当前 PWM']].map(function (item, index) {
+                    return {xtype:'panel', title:item[1], flex:1, margin:index === 4 ? '0' : '0 8 0 0', bodyPadding:10,
                         items:[{xtype:'component', itemId:item[0], html:'—'}]};
                 })
             }, {
