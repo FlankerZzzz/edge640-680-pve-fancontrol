@@ -4,6 +4,10 @@ if [ "$(id -u)" -ne 0 ]; then
   command -v sudo >/dev/null 2>&1 || { echo '请以 root 运行：su - 或直接 ./uninstall.sh'; exit 1; }
   exec sudo bash "$0" "$@"
 fi
+DIR="$(cd "$(dirname "$0")" && pwd)"
+if [ -f /usr/share/perl5/PVE/API2/EdgeFanControl.pm ]; then
+  bash "$DIR/native/uninstall.sh"
+fi
 systemctl disable --now fancontroller-web.service fancontroller-watchdog.timer fancontroller-pwm.timer || true
 systemctl stop fancontroller-pwm.service fancontroller-watchdog.service fancontroller-failsafe.service || true
 if [ -x /usr/local/sbin/fancontroller-failsafe.sh ]; then

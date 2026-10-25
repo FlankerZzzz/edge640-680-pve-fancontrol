@@ -45,6 +45,32 @@ def service_status(demo=False):
         return {key: "unknown" for key in ("timer", "i2c", "watchdog", "logrotate")}
 
 
+def panel_status(controller, demo=False):
+    """One status policy for loopback Web and authenticated PVE-native API."""
+    status = controller.status()
+    status.update(services=service_status(demo), demo=demo)
+    if not demo and status["services"]["timer"] != "active":
+        status["control_available"] = False
+        status["error"] = "温控定时器未运行；watchdog 将请求全速"
+    if not demo and status["services"]["watchdog"] != "active":
+        status["control_available"] = False
+        status["error"] = "独立 watchdog 未运行，请先恢复保护服务"
+    if not demo and status["services"]["logrotate"] != "active":
+        status["warning"] = "日志轮转定时器未运行，请检查 logrotate.timer"
+    return status
+
+
+def tail_logs(controller):
+    try:
+        with controller.log_path.open("rb") as stream:
+            stream.seek(0, 2)
+            size = stream.tell()
+            stream.seek(max(0, size - 32768))
+            return {"lines": stream.read().decode("utf-8", "replace").splitlines()[-30:]}
+    except FileNotFoundError:
+        return {"lines": []}
+
+
 def make_server(controller, token, port=19090, demo=False, assets=None):
     assets = Path(assets) if assets else Path(__file__).resolve().parent / "web"
 
@@ -95,30 +121,11 @@ def make_server(controller, token, port=19090, demo=False, assets=None):
                 return
             if self.path == "/api/status":
                 try:
-                    status = controller.status()
-                    status.update(services=service_status(demo), demo=demo)
-                    if not demo and status["services"]["timer"] != "active":
-                        status["control_available"] = False
-                        status["error"] = "温控定时器未运行；watchdog 将请求全速"
-                    if not demo and status["services"]["watchdog"] != "active":
-                        status["control_available"] = False
-                        status["error"] = "独立 watchdog 未运行，请先恢复保护服务"
-                    if not demo and status["services"]["logrotate"] != "active":
-                        status["warning"] = "日志轮转定时器未运行，请检查 logrotate.timer"
-                    self.respond(status)
+                    self.respond(panel_status(controller, demo))
                 except Exception:
                     self.respond({"error": "读取状态失败，请检查 journald"}, 503)
             elif self.path == "/api/logs":
-                try:
-                    # Bounded tail; do not load a long log into server memory.
-                    with controller.log_path.open("rb") as stream:
-                        stream.seek(0, 2)
-                        size = stream.tell()
-                        stream.seek(max(0, size - 32768))
-                        lines = stream.read().decode("utf-8", "replace").splitlines()[-30:]
-                    self.respond({"lines": lines})
-                except FileNotFoundError:
-                    self.respond({"lines": []})
+                self.respond(tail_logs(controller))
             else:
                 self.respond({"error": "Not found"}, 404)
 

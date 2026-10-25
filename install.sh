@@ -53,3 +53,6 @@ systemctl restart fancontroller-web.service
 echo '安装完成。页面 http://127.0.0.1:19090/；远程访问使用 SSH 隧道。'
 echo '管理令牌：在主机运行 cat /etc/edge-fancontrol/web-token 查看。'
 echo '日志每日轮转，保留 30 天；详情见 docs/WEB.md。'
+if [ "${1:-}" = --native ]; then
+  bash "$DIR/native/install.sh"
+fi
