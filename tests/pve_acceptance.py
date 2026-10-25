@@ -203,9 +203,11 @@ def main():
                 time.sleep(0.5)
         checks.append("Manual PWM255 saved and survives Web-service restart")
         select(original["mode"], original["manual_pwm"])
-        wait_for(lambda s: s["error"] is None and s["state"]["reason"] == "auto"
-                 and s["live"]["pwm"] < 255, 180, "fallback_recovery")
-        checks.append("Fallback recovered after cooldown; original automatic setting restored")
+        wait_for(lambda s: s["error"] is None and s["state"]["reason"] == original["mode"]
+                 and (s["live"]["pwm"] < 255 if original["mode"] == "auto"
+                      else s["state"]["last_pwm"] == original["manual_pwm"]),
+                 180, "fallback_recovery")
+        checks.append("Fallback recovered after cooldown; original setting restored")
         report["passed"] = True
     except Exception as exc:
         report["failure"] = str(exc)

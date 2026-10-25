@@ -15,7 +15,7 @@
 - TC654：`i2c-0`，地址 `0x1b`
 - TC654 `pwm1_mode=1`（SMBus 软件控制 PWM；`0` 为 Vin 输入控制，输出本身仍是 PWM）
 
-以上平台的实机记录来自 1.0。1.1 已进行隔离的模拟硬件及 HTTP 测试，尚未完成目标 PVE 上的安装、重启与压测验收。TC654 模式语义见 [Linux 内核文档](https://docs.kernel.org/hwmon/tc654.html)。
+1.1 已于 2026-10-25 在 Edge680 / `7.0.14-25-pve` 完成安装、26 项自动测试、16 worker / 120 秒压测、完整降速、全速 fallback、页面服务重启及日志轮转验证；尚未进行整机重启与浏览器视觉验收。详情见 [测试记录](docs/TESTING-1.1.md)。TC654 模式语义见 [Linux 内核文档](https://docs.kernel.org/hwmon/tc654.html)。
 
 ## 控制策略
 

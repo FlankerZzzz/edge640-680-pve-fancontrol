@@ -26,3 +26,32 @@ Shell 脚本逐个 `bash -n`，前端 `node --check src/web/app.js`，`git diff 
 - 使用独立测试夹具验证 watchdog 采样过期和全速请求；不通过破坏真实 I²C 总线来模拟故障。
 
 1.0 的历史压测数据仍在 VERSION.md，它不构成 1.1 实机通过证明。
+
+## 2026-10-25：Edge680 / PVE 实机验收补充
+
+平台：VMwareEdge680，Linux `7.0.14-25-pve`。先备份旧服务后安装功能分支。以下记录为实际硬件测试，取代上面对应项目的“待验证”状态。
+
+- Linux 上最新 26 项自动测试全部通过，包括 Host/Origin/令牌、SSH 端口映射、并发配置冲突和故障回归。
+- `systemd-analyze verify` 通过；温控 timer、watchdog timer、Web 服务、logrotate timer 均 active 且 enabled。
+- `stress-ng --cpu 16 --timeout 120s --metrics-brief`：16 worker，failed=0。
+- CPU 起始约 51°C，采样最高 68°C；约 10 秒内升至请求 PWM255 / 读回255。
+- 双风扇采样最高约 9500 / 9200 RPM。
+- 压力解除后完整观察保护等待：120 秒结束并到达下次 tick 后，从255降至请求119 / 读回124，RPM约3750 / 3650。
+- 临时注入“无 CPU 温度”：真实 TC654 立即写入并读回255；未解除真实传感器绑定。
+- 用隔离的损坏配置输入测试：真实输出255；正式配置文件保留。
+- 停止温控 timer，调用 watchdog：独立保护读回255。
+- 使用 `/run` 临时 drop-in 让控制服务失败：确认 `OnFailure` 启动独立 fallback 单元并写255，之后移除 drop-in、恢复 timer，两个服务 Result=success。
+- 手动255保存后重启 Web 服务，设置仍保留；随后恢复原自动设置。
+- fallback 恢复期结束，实际回到 PWM102、约2950 / 2850 RPM，error=null。
+- logrotate debug 与一次真实轮转通过；隔离的33天归档夹具证实最多30份、过期清理、空日志轮转及旧归档压缩。
+- 通过本机SSH映射端口验证页面 HTTP200、未授权状态接口 HTTP401。
+
+实机自动验收共10项检查，耗时约465秒，报告 `passed=true`。复测命令（会实际压测与写PWM，需在Linux root执行）：
+
+```bash
+python3 tests/pve_acceptance.py --run-live --stress-seconds 120
+```
+
+报告保存到主机 `/var/lib/fancontroller-pwm/acceptance-*/report.json`。旧服务备份位于主机 `/root/edge-fancontrol-backup-2ebUShyn/installed.tgz`。
+
+仍未验证：整机重启、8秒超时路径、watchdog自身失效、真实I²C硬件故障、浏览器视觉/移动端布局。实机没有修改网络、GRUB或SR-IOV。
