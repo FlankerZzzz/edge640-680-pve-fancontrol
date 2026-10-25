@@ -6,6 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
 from pathlib import Path
+import re
 import secrets
 import subprocess
 import threading
@@ -46,7 +47,6 @@ def service_status(demo=False):
 
 def make_server(controller, token, port=19090, demo=False, assets=None):
     assets = Path(assets) if assets else Path(__file__).resolve().parent / "web"
-    allowed_hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
 
     class Handler(BaseHTTPRequestHandler):
         def setup(self):
@@ -67,7 +67,11 @@ def make_server(controller, token, port=19090, demo=False, assets=None):
             self.wfile.write(body)
 
         def valid_host(self):
-            return self.headers.get("Host") in allowed_hosts
+            # SSH may forward localhost:19091 to PVE localhost:19090.
+            # Keep hostnames loopback-only; POST must still match Origin + bearer.
+            match = re.fullmatch(r"(?:127\.0\.0\.1|localhost):([0-9]{1,5})",
+                                 self.headers.get("Host", ""))
+            return bool(match and 1 <= int(match.group(1)) <= 65535)
 
         def authorized(self):
             return hmac.compare_digest(self.headers.get("Authorization", ""), "Bearer " + token)
@@ -154,8 +158,6 @@ def make_server(controller, token, port=19090, demo=False, assets=None):
             pass
 
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    actual_port = server.server_address[1]
-    allowed_hosts.update({f"127.0.0.1:{actual_port}", f"localhost:{actual_port}"})
     server.daemon_threads = True
     return server
 

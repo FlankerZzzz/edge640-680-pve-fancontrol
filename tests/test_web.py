@@ -83,6 +83,14 @@ class WebTests(unittest.TestCase):
             codes = sorted(f.result()[0] for f in futures)
         self.assertEqual(codes, [200, 409])
 
+    def test_ssh_forwarded_local_port_and_invalid_hosts(self):
+        self.assertEqual(self.request("/api/status", headers={"Host": "127.0.0.1:19091"})[0], 200)
+        payload = {"mode": "manual", "pwm": 160, "revision": 0}
+        headers = {"Host": "localhost:19091", "Origin": "http://localhost:19091"}
+        self.assertEqual(self.request("/api/control", payload, headers)[0], 200)
+        for host in ("evil.test:19091", "user@localhost:19091", "localhost:65536", "localhost:0"):
+            self.assertEqual(self.request("/api/status", headers={"Host": host})[0], 403)
+
     def test_log_api_uses_last_30_lines(self):
         with self.controller.log_path.open("w") as stream:
             stream.write("\n".join(str(i) for i in range(100)) + "\n")
