@@ -4,6 +4,10 @@
     // remain non-strict; strict mode prevents the parent initializer running.
     if (window.__edgeFanNative || !window.Ext || !window.PVE) { return; }
     window.__edgeFanNative = true;
+    // Follow the PVE-selected UI language, not the browser/operating-system locale.
+    const language = String((typeof Proxmox !== 'undefined' && Proxmox.defaultLang) || 'en').toLowerCase().replace(/-/g, '_');
+    const menuTitle = language === 'zh_tw' || language === 'zh_hk' ? '風扇控制' :
+        language.startsWith('zh') ? '风扇控制' : 'Fan Control';
     const esc = value => Ext.String.htmlEncode(String(value == null ? '—' : value));
     // Linux TC654 sysfs values for the 16 hardware duty codes (not codes 0–15).
     const pwmValues = [77,88,102,112,124,136,148,160,172,184,196,207,219,231,243,255];
@@ -237,7 +241,7 @@
             if (this instanceof PVE.node.Config && Ext.isArray(this.items) &&
                 !this.items.some(item => item.itemId === 'edge-fancontrol')) {
                 this.items.push({xtype:'pveEdgeFanControl', itemId:'edge-fancontrol',
-                    title:'风扇控制', iconCls:'fa fa-thermometer-half'});
+                    title:menuTitle, iconCls:'fa fa-thermometer-half'});
             }
             this.callParent(arguments);
         }

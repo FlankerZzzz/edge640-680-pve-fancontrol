@@ -22,6 +22,7 @@ navigation.initComponent.call(node);
 assert(node.parentCalled);
 assert.equal(node.items.length,2);
 assert.equal(node.items[1].itemId,'edge-fancontrol');
+assert.equal(node.items[1].title,'Fan Control');
 navigation.initComponent.call(node);
 assert.equal(node.items.length,2);
 const vmPanel={items:[{itemId:'summary'}],callParent:()=>{}};
@@ -69,6 +70,17 @@ const view = {snapshot:{config:{mode:'auto',manual_pwm:160,revision:0}, control_
     native_access:{can_modify:false}}, formRevision:0, down:id=>fields[id], busy:false};
 panel.updateButtons.call(view);
 assert.equal(fields['#edge-apply'].disabled,true);
+for (const [language,expected] of [['en','Fan Control'],['zh_CN','风扇控制'],['zh-CN','风扇控制'],['zh_TW','風扇控制']]) {
+    const localized={};
+    const localizedExt={...Ext,define:(name,spec)=>{localized[name]=spec;}};
+    vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../native/edge-fancontrol.js'),'utf8'),
+        {window:{Ext:localizedExt,PVE},Ext:localizedExt,PVE,Proxmox:{...Proxmox,defaultLang:language},console,Date,Number});
+    const localizedNode=new PVE.node.Config();
+    localizedNode.items=[];
+    localizedNode.callParent=function () { assert(this.callParent.caller); };
+    localized['PVE.edge.FanControlNavigation'].initComponent.call(localizedNode);
+    assert.equal(localizedNode.items[0].title,expected);
+}
 view.snapshot.native_access.can_modify=true;
 panel.updateButtons.call(view);
 assert.equal(fields['#edge-apply'].disabled,false);
