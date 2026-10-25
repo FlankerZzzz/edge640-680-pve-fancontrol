@@ -179,7 +179,7 @@ git switch -c feature/你的功能名称
 修改后至少执行：
 
 ```bash
-bash -n install.sh uninstall.sh src/*.sh
+for f in install.sh uninstall.sh src/*.sh; do bash -n "$f" || exit; done
 python3 -m unittest discover -s tests -v
 systemd-analyze verify systemd/*.service systemd/*.timer
 git diff --check
